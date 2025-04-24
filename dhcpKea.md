@@ -94,3 +94,29 @@ Esta configuración por defecto no se guarda si reiniciamos el servidor, por lo 
 `netfilter-persistent reload`  
 
 ### Nftables
+Tendremos que instalar Nftables:  
+`apt install nftables`  
+Tras su instalación, vamos a su fichero de configuración y agregamos lo siguiente:  
+```json
+table inet nat {
+  chain postrouting {
+    type nat hook postrouting priority 100;
+    oifname "enp0s3" masquerade
+    }
+}
+
+table inet filter {
+  chain forward {
+    type filter hook forward priority 0;
+
+    iifname "enp0s8" oifname "enp0s3" accept
+
+    iifname "enp0s3" oifname "enp0s8" ct state related,established accept
+
+    drop
+  }
+}
+```
+Tras esto, reiniciamos el servicio de Nftables:  
+`Systemctl restart nftables`  
+Y a partir de ahora, los clientes de nuestro servicio dhcp deberian tener conexión a internet.
